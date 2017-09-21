@@ -173,8 +173,8 @@ function makearXiv(feed)
     num_entries = arxiv_max_entries;
     extra_entries = true;
   }
-  previousId='';
-  counter = 0;
+  var previousId='';
+  var counter = 0;
   for (x=0; x<feed.entries.length; x++) {
     if (feed.entries[x].id !== previousId) {
       counter++;
@@ -268,8 +268,8 @@ function makePrettyarXiv(feed)
   else {
     num_entries = arxiv_max_entries;
   }
-  previousId='';
-  counter = 0;
+  var previousId='';
+  var counter = 0;
   for (x=0; x<feed.entries.length; x++) {
     if (feed.entries[x].id !== previousId) {
       counter++;
