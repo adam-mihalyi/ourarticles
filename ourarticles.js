@@ -173,59 +173,67 @@ function makearXiv(feed)
     num_entries = arxiv_max_entries;
     extra_entries = true;
   }
-  for (x=0; x<num_entries; x++) {
-    //Add the numeral in brackets with a space
-    html += '<dt>['+(x+1)+']&nbsp\n';
-    //add a span with the ref to the id in it
-    html += '\t<span class="list-identifier"><a href="'+feed.entries[x].id+'" title="Abstract">'+feed.entries[x].id+'</a> [';
-    //now add the formats listed in the dictioary at feed.entries[x].formats
-    for (format_name in feed.entries[x].formats) {
-      if (feed.entries[x].formats.hasOwnProperty(format_name)) {
-        var format_value = feed.entries[x].formats[format_name]
-          html += '<a href="' + format_value 
-          +'" title="Download '+format_name+'">'+ format_name+'</a>';
+  previousId='';
+  counter = 0;
+  for (x=0; x<feed.entries.length; x++) {
+    if (feed.entries[x].id !== previousId) {
+      counter++;
+      //Add the numeral in brackets with a space
+      html += '<dt>['+(counter)+']&nbsp\n';
+      //add a span with the ref to the id in it
+      html += '\t<span class="list-identifier"><a href="'+feed.entries[x].id+'" title="Abstract">'+feed.entries[x].id+'</a> [';
+      //now add the formats listed in the dictioary at feed.entries[x].formats
+      for (format_name in feed.entries[x].formats) {
+        if (feed.entries[x].formats.hasOwnProperty(format_name)) {
+          var format_value = feed.entries[x].formats[format_name]
+            html += '<a href="' + format_value 
+            +'" title="Download '+format_name+'">'+ format_name+'</a>';
+        }
+      }  
+      //Close the list of formats with the vrack and span
+      html += "]</span>\n</dt>\n";
+      //open a set of divs to contain the various fields
+      html+='<dd>\n\t<div class="meta">\n\t\t<div class="list-title">\n'
+        //Add the title in a span
+        html += '\t\t\t'+ feed.entries[x].title+'\n\t\t</div>';
+      //add authors in a div
+      html += '\t\t<div class="list-authors">'+feed.entries[x].authors+'</div>\n';
+      //Add coments in a div only if available
+      if (arxiv_includeComments && feed.entries[x].comment && feed.entries[x].comment.length > 1) {
+        html += '\t\t<div class="list-comments"><span class="descriptor">Comments:</span> ' + feed.entries[x].comment + '</div>\n';
       }
-    }  
-    //Close the list of formats with the vrack and span
-    html += "]</span>\n</dt>\n";
-    //open a set of divs to contain the various fields
-    html+='<dd>\n\t<div class="meta">\n\t\t<div class="list-title">\n'
-      //Add the title in a span
-      html += '\t\t\t'+ feed.entries[x].title+'\n\t\t</div>';
-    //add authors in a div
-    html += '\t\t<div class="list-authors">'+feed.entries[x].authors+'</div>\n';
-    //Add coments in a div only if available
-    if (arxiv_includeComments && feed.entries[x].comment && feed.entries[x].comment.length > 1) {
-      html += '\t\t<div class="list-comments"><span class="descriptor">Comments:</span> ' + feed.entries[x].comment + '</div>\n';
-    }
-    //Add the subject in a div
-    if (arxiv_includeSubjects) {
-      html += '\t\t<div class="list-subjects"><span class="descriptor">Subjects:</span> <span class="primary-subject">' + feed.entries[x].subject + '</span>';
-      //Add non-primaries if available
-      if (feed.entries[x].categories && feed.entries[x].categories.length > 1) {
-        html += '; '+feed.entries[x].categories; }
-      //Close subjects div
-      html += '</div>\n';
-    }
-    //Add journal_ref if present and not disabled
-    if (arxiv_includeJournalRef && feed.entries[x].journal_ref && feed.entries[x].journal_ref.length > 1) {
-      html += '\t\t<div class="list-journal-ref"><span class="descriptor">Journal ref:</span> ' + feed.entries[x].journal_ref + '</div>\n';
-    }
-    //Add and link DOI if present and not disabled (there may be multiple, space separated entries)
-    if (arxiv_includeDOI && feed.entries[x].doi && feed.entries[x].doi.length > 0) {
-      html += '\t\t<div class="list-doi"><span class="descriptor">DOI:</span> ';
-      var dois = feed.entries[x].doi.split(' ');
-      for (var j in dois) {
-        html += '<a href="https://dx.doi.org/'+dois[j]+'">'+dois[j]+'</a> '; 
+      //Add the subject in a div
+      if (arxiv_includeSubjects) {
+        html += '\t\t<div class="list-subjects"><span class="descriptor">Subjects:</span> <span class="primary-subject">' + feed.entries[x].subject + '</span>';
+        //Add non-primaries if available
+        if (feed.entries[x].categories && feed.entries[x].categories.length > 1) {
+          html += '; '+feed.entries[x].categories; }
+        //Close subjects div
+        html += '</div>\n';
       }
-      html += '</div>\n';
+      //Add journal_ref if present and not disabled
+      if (arxiv_includeJournalRef && feed.entries[x].journal_ref && feed.entries[x].journal_ref.length > 1) {
+        html += '\t\t<div class="list-journal-ref"><span class="descriptor">Journal ref:</span> ' + feed.entries[x].journal_ref + '</div>\n';
+      }
+      //Add and link DOI if present and not disabled (there may be multiple, space separated entries)
+      if (arxiv_includeDOI && feed.entries[x].doi && feed.entries[x].doi.length > 0) {
+        html += '\t\t<div class="list-doi"><span class="descriptor">DOI:</span> ';
+        var dois = feed.entries[x].doi.split(' ');
+        for (var j in dois) {
+          html += '<a href="https://dx.doi.org/'+dois[j]+'">'+dois[j]+'</a> '; 
+        }
+        html += '</div>\n';
+      }
+      //Add summary in a paragraph if requested
+      if (arxiv_includeSummary != 0) {
+        html += '\t\t<p>' + feed.entries[x].summary + '</p>\n';
+      }
+      //close out the div and dd
+      html += '\t</div>\n</dd>';
+      previousId = feed.entries[x].id;
+      if (counter == num_entries) break;
     }
-    //Add summary in a paragraph if requested
-    if (arxiv_includeSummary != 0) {
-      html += '\t\t<p>' + feed.entries[x].summary + '</p>\n';
-    }
-    //close out the div and dd
-    html += '\t</div>\n</dd>';
+    //else html += '<h3>DUPLICATE!</h3>';
   }
   if (extra_entries) {
     html +='<br /><span>[ Showing '+num_entries+' of '+feed.entries.length+' total entries, additional <a href="https://arxiv.org/a/'+arxiv_authorid+'">'+(feed.entries.length-num_entries)+'</a> entries available at arXiv.org ]</span>';
@@ -259,20 +267,28 @@ function makePrettyarXiv(feed)
   }
   else {
     num_entries = arxiv_max_entries;
-  } 
-  for (x=0; x<num_entries; x++) {
-    //First add the title-link element as a entrytitle div
-    html += '<div class="entry">';
-    //Title and authors
-    html += '<p class="entrytitle"><a href="' + feed.entries[x].id + '">' + feed.entries[x].title + '</a></p>';
-    html += '<p class="entryauthors">' + feed.entries[x].authors + '. <span class="entrydate">(pub.' + moment(feed.entries[x].published).format('YYYY-MM-DD') + ')</span></p>';
-    //add summary only if desired
-    if (arxiv_includeSummary == 1)
-    {
-      html += '<p class="entrysummary">' + feed.entries[x].summary+ '</p>';
+  }
+  previousId='';
+  counter = 0;
+  for (x=0; x<feed.entries.length; x++) {
+    if (feed.entries[x].id !== previousId) {
+      counter++;
+      //First add the title-link element as a entrytitle div
+      html += '<div class="entry">';
+      //Title and authors
+      html += '<p class="entrytitle"><a href="' + feed.entries[x].id + '">' + feed.entries[x].title + '</a></p>';
+      html += '<p class="entryauthors">' + feed.entries[x].authors + '. <span class="entrydate">(pub.' + moment(feed.entries[x].published).format('YYYY-MM-DD') + ')</span></p>';
+      //add summary only if desired
+      if (arxiv_includeSummary == 1)
+      {
+        html += '<p class="entrysummary">' + feed.entries[x].summary+ '</p>';
+      }
+      //end the entry div
+      html +="</div>";
+      previousId = feed.entries[x].id;
+      if (counter == num_entries) break;
     }
-    //end the entry div
-    html +="</div>";
+    //else html += '<h3>DUPLICATE!</h3>';
   }
   html += "</div>"
     return(html);
